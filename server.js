@@ -19,8 +19,8 @@ const init = async () => {
   await server.register({
     plugin: rateLimit,
     options: {
-      userLimit: false,
-      pathLimit: false
+      userLimit: 5,
+      pathLimit: 60 * 1000,
     }
   });
 
