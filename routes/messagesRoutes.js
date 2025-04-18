@@ -1,6 +1,6 @@
 const Joi = require('joi');
 const messageController = require('../controllers/messageController');
-const messageLimiter = require('../middlewares/rateLimiter');
+const messageLimiter = require('../../middlewares/rateLimiter');
 
 const routes = (server) => {
   server.route([

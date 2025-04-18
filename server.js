@@ -5,6 +5,7 @@ const rateLimit = require('hapi-rate-limit');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const messageRoutes = require('./routes/messagesRoutes');
 
 const init = async () => {
   const server = Hapi.server({
@@ -28,7 +29,7 @@ const init = async () => {
   server.route(authRoutes);
   server.route(userRoutes);
   server.route(contactRoutes);
-
+  server.route(messageRoutes);
   await server.start();
   console.log('Server running on %s', server.info.uri);
 };
