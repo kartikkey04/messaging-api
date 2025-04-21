@@ -1,33 +1,59 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const logger = require('../utils/logger');
 
-const register = async (req, h) => {
-  const { email, name, password } = req.payload;
+exports.register = async (request, h) => {
+  try {
+    const { name, email, password } = request.payload;
 
-  const existing = await User.findOne({ email });
-  if (existing) return h.response({ message: 'Email already registered' }).code(400);
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      logger.warn(`Register failed: Email already in use - ${email}`);
+      return h.response({ message: 'Email already in use' }).code(400);
+    }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ name, email, password: hashedPassword });
+    await newUser.save();
 
-  const user = new User({ email, name, password: hashedPassword });
-  await user.save();
-
-  return h.response({ message: 'User registered successfully' }).code(201);
+    logger.info(`New user registered: ${email}`);
+    return h.response({ message: 'User registered successfully' }).code(201);
+  } catch (err) {
+    logger.error(`Register error: ${err.message}`);
+    return h.response({ message: 'Server error' }).code(500);
+  }
 };
 
-const login = async (req, h) => {
-  const { email, password } = req.payload;
+exports.login = async (request, h) => {
+  try {
+    const { email, password } = request.payload;
 
-  const user = await User.findOne({ email });
-  if (!user) return h.response({ message: 'Invalid credentials' }).code(401);
+    const user = await User.findOne({ email });
+    if (!user) {
+      logger.warn(`Login failed: Invalid email - ${email}`);
+      return h.response({ message: 'Invalid credentials' }).code(401);
+    }
 
-  const match = await bcrypt.compare(password, user.password);
-  if (!match) return h.response({ message: 'Invalid credentials' }).code(401);
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      logger.warn(`Login failed: Invalid password for email - ${email}`);
+      return h.response({ message: 'Invalid credentials' }).code(401);
+    }
 
-  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign(
+      {
+        _id: user._id,
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
-  return h.response({ token }).code(200);
+    logger.info(`Login successful: ${email}`);
+    return h.response({ token }).code(200);
+  } catch (err) {
+    logger.error(`Login error: ${err.message}`);
+    return h.response({ message: 'Server error' }).code(500);
+  }
 };
-
-module.exports = { register, login };

@@ -2,12 +2,18 @@
   "dependencies": {
     "@hapi/boom": "^10.0.1",
     "@hapi/hapi": "^21.4.0",
+    "@hapi/inert": "^7.1.0",
+    "@hapi/vision": "^7.0.3",
     "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
     "dotenv": "^16.5.0",
+    "express-rate-limit": "^7.5.0",
     "hapi-rate-limit": "^7.1.0",
+    "hapi-swagger": "^17.3.2",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.13.2"
+    "mongoose": "^8.13.2",
+    "winston": "^3.17.0"
   },
   "name": "messaging-api-hapijs",
   "version": "1.0.0",

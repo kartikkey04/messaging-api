@@ -8,6 +8,9 @@ module.exports = [
     path: '/contacts/request',
     handler: sendRequest,
     options: {
+      tags: ['api', 'contacts'],
+      description: 'Send contact request',
+      notes: 'Allows a user to send a contact request to another user',
       pre: [authMiddleware],
       validate: {
         payload: Joi.object({
@@ -21,10 +24,13 @@ module.exports = [
     path: '/contacts/accept',
     handler: acceptRequest,
     options: {
+      tags: ['api', 'contacts'],
+      description: 'Accept contact request',
+      notes: 'Accepts a pending contact request from another user',
       pre: [authMiddleware],
       validate: {
         payload: Joi.object({
-          contactId: Joi.string().required()
+          senderId: Joi.string().required()
         })
       }
     }
@@ -34,6 +40,9 @@ module.exports = [
     path: '/contacts',
     handler: listContacts,
     options: {
+      tags: ['api', 'contacts'],
+      description: 'Get accepted contacts',
+      notes: 'Returns a list of all accepted contacts for the logged-in user',
       pre: [authMiddleware]
     }
   }

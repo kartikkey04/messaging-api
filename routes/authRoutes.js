@@ -7,6 +7,9 @@ module.exports = [
     path: '/auth/register',
     handler: register,
     options: {
+      tags: ['api', 'auth'],
+      description: 'Register a new user',
+      notes: 'Creates a new user with name, email, and password',
       validate: {
         payload: Joi.object({
           email: Joi.string().email().required(),
@@ -21,6 +24,9 @@ module.exports = [
     path: '/auth/login',
     handler: login,
     options: {
+      tags: ['api', 'auth'],
+      description: 'Login user',
+      notes: 'Authenticates user and returns JWT token',
       validate: {
         payload: Joi.object({
           email: Joi.string().email().required(),

@@ -1,12 +1,12 @@
-const Message = require('../models/Message');
+const Message = require('../models/message');
 const Contact = require('../models/Contact');
+const logger = require('../utils/logger');
 
 exports.sendMessage = async (request, h) => {
   try {
+    const senderId = request.user._id;
     const { receiverId, message } = request.payload;
-    const senderId = request.auth.credentials.id;
 
-    // Check if the receiver is a contact
     const contact = await Contact.findOne({
       $or: [
         { sender: senderId, receiver: receiverId, status: 'accepted' },
@@ -15,36 +15,27 @@ exports.sendMessage = async (request, h) => {
     });
 
     if (!contact) {
-      return h.response({ message: 'You can only message accepted contacts' }).code(400);
+      logger.warn(`Unauthorized message attempt from ${senderId} to ${receiverId}`);
+      return h.response({ message: 'You can only message accepted contacts' }).code(403);
     }
 
-    // Create and save the message
-    const newMessage = new Message({ sender: senderId, receiver: receiverId, content: message });
+    const newMessage = new Message({ sender: senderId, receiver: receiverId, message });
     await newMessage.save();
 
+    logger.info(`Message sent from ${senderId} to ${receiverId}`);
     return h.response({ message: 'Message sent successfully' }).code(201);
-  } catch (error) {
-    return h.response({ message: 'Failed to send message', error }).code(500);
+  } catch (err) {
+    logger.error(`Message sending error: ${err.message}`);
+    return h.response({ message: 'Server error' }).code(500);
   }
 };
 
 exports.getMessages = async (request, h) => {
   try {
-    const contactId = request.params.contactId;
-    const userId = request.auth.credentials.id;
-
-    const contact = await Contact.findOne({
-      $or: [
-        { sender: userId, receiver: contactId, status: 'accepted' },
-        { sender: contactId, receiver: userId, status: 'accepted' }
-      ]
-    });
-
-    if (!contact) {
-      return h.response({ message: 'No contact found' }).code(404);
-    }
-
+    const userId = request.user._id;
+    const { contactId } = request.params;
     const { page = 1, limit = 10 } = request.query;
+
     const skip = (page - 1) * limit;
 
     const messages = await Message.find({
@@ -53,13 +44,15 @@ exports.getMessages = async (request, h) => {
         { sender: contactId, receiver: userId }
       ]
     })
+      .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: 1 })
-      .populate('sender receiver', 'name email');
+      .limit(parseInt(limit));
 
-    return h.response(messages).code(200);
-  } catch (error) {
-    return h.response({ message: 'Failed to fetch messages', error }).code(500);
+    logger.info(`Fetched messages between ${userId} and ${contactId} - Page: ${page}`);
+
+    return h.response({ messages }).code(200);
+  } catch (err) {
+    logger.error(`Failed to get messages: ${err.message}`);
+    return h.response({ message: 'Server error' }).code(500);
   }
 };

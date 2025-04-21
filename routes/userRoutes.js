@@ -4,10 +4,10 @@ const authMiddleware = require('../middlewares/authMiddleware');
 module.exports = [
   {
     method: 'GET',
-    path: '/users/me',
+  path: '/users/me',
+  options: {
+    pre: [{ method: authMiddleware }],
     handler: getProfile,
-    options: {
-      pre: [authMiddleware]
-    }
   }
+}
 ];

@@ -1,8 +1,7 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 const Boom = require('@hapi/boom');
 
-const authMiddleware = async (request, h) => {
+module.exports = async (request, h) => {
   const authHeader = request.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -13,14 +12,16 @@ const authMiddleware = async (request, h) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select('-password');
-    if (!user) throw Boom.unauthorized('User not found');
 
-    request.auth = { user };
+    request.auth = {
+      credentials: {
+        _id: decoded._id,
+        email: decoded.email
+      }
+    };
+
     return h.continue;
   } catch (err) {
     throw Boom.unauthorized('Invalid or expired token');
   }
 };
-
-module.exports = authMiddleware;
