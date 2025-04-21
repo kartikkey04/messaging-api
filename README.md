@@ -19,6 +19,10 @@ A secure, API-based messaging platform built with **Hapi.js**, **MongoDB**, **JW
 
 - **Logging**
   - Requests and errors are logged using **Winston**.
+<<<<<<< HEAD
+=======
+  - HTTP request logging via **Morgan**.
+>>>>>>> refs/remotes/origin/main
 
 ## Tech Stack
 
@@ -26,6 +30,10 @@ A secure, API-based messaging platform built with **Hapi.js**, **MongoDB**, **JW
 - **MongoDB** with **Mongoose** for data storage.
 - **JWT** (JSON Web Tokens) for user authentication.
 - **bcrypt** for secure password hashing.
+<<<<<<< HEAD
+=======
+- **Morgan** for HTTP request logging.
+>>>>>>> refs/remotes/origin/main
 - **Winston** for custom application logging.
 - **Express-rate-limit** for rate limiting.
 
