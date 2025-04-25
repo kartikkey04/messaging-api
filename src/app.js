@@ -4,21 +4,40 @@ const userRoutes = require('./modules/users/user.routes');
 const contactRoutes = require('./modules/contacts/contact.routes');
 const messageRoutes = require('./modules/messages/message.routes');
 const rateLimit = require('hapi-rate-limit');
+const Inert = require('@hapi/inert');
+const Vision = require('@hapi/vision');
+const HapiSwagger = require('hapi-swagger');
+const Pack = require('../package.json');
 
-await server.register({
-    plugin: rateLimit,
-    options: {
-      userLimit: 100, 
-      pathLimit: {
-        '/messages': {
-          method: 'post',
-          limit: 5,            
-          duration: 60 * 1000, 
+await server.register([
+    Inert,
+    Vision,
+    {
+      plugin: HapiSwagger,
+      options: {
+        info: {
+          title: 'Messaging API Documentation',
+          version: Pack.version,
         },
+        grouping: 'tags',
       },
-      trustProxy: true,
     },
-  });
+    {
+      plugin: rateLimit,
+      options: {
+        userLimit: 100,
+        pathLimit: {
+          '/messages': {
+            method: 'post',
+            limit: 5,
+            duration: 60 * 1000,
+          },
+        },
+        trustProxy: true,
+      },
+    },
+  ]);
+  
 const createServer = async () => {
   const server = Hapi.server({
     port: process.env.PORT || 3000,
