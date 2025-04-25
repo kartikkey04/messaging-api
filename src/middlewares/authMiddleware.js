@@ -1,27 +1,27 @@
-const jwt = require('jsonwebtoken');
-const Boom = require('@hapi/boom');
+const { verifyToken } = require('../utils/jwt');
+const User = require('../modules/auth/auth.model');
 
-module.exports = async (request, h) => {
-  const authHeader = request.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw Boom.unauthorized('Missing or invalid token');
-  }
-
-  const token = authHeader.split(' ')[1];
-
+const authMiddleware = async (request, h) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const authHeader = request.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('Missing or invalid token');
+    }
 
-    request.auth = {
-      credentials: {
-        _id: decoded._id,
-        email: decoded.email
-      }
-    };
+    const token = authHeader.split(' ')[1];
+    const decoded = verifyToken(token);
 
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user) throw new Error('User not found');
+
+    request.auth = { user };
     return h.continue;
   } catch (err) {
-    throw Boom.unauthorized('Invalid or expired token');
+    return h
+      .response({ message: 'Unauthorized', error: err.message })
+      .code(401)
+      .takeover();
   }
 };
+
+module.exports = authMiddleware;
