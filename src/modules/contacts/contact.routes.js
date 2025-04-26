@@ -1,52 +1,49 @@
-const Joi = require('joi');
-const {
-  sendContactRequestHandler,
-  acceptContactRequestHandler,
-  getContactsHandler,
-} = require('./contact.controller');
-const authMiddleware = require('../../middlewares/authMiddleware');
+const ContactController = require('./contact.controller');
+const Joi = require('joi'); 
+const { verifyToken } = require('../../middlewares/authMiddleware');
 
-const contactRoutes = [
+module.exports = [
   {
     method: 'POST',
     path: '/contacts/request',
-    handler: sendContactRequestHandler,
     options: {
-      tags: ['api', 'contacts'],
-      description: 'Send a contact request to another user',
-      pre: [{ method: authMiddleware }],
+      tags: ['api', 'Contact'],
+      description: 'Send a contact request',
+      notes: 'Requires JWT authentication',
       validate: {
         payload: Joi.object({
           receiverId: Joi.string().required(),
         }),
       },
+      pre: [{ method: verifyToken }], 
+      handler: ContactController.sendRequest,
     },
   },
   {
     method: 'POST',
     path: '/contacts/accept',
-    handler: acceptContactRequestHandler,
     options: {
-      tags: ['api', 'contacts'],
+      tags: ['api', 'Contact'],
       description: 'Accept a contact request',
-      pre: [{ method: authMiddleware }],
+      notes: 'Requires JWT authentication',
       validate: {
         payload: Joi.object({
-          senderId: Joi.string().required(),
+          contactId: Joi.string().required(),
         }),
       },
+      pre: [{ method: verifyToken }], 
+      handler: ContactController.acceptRequest,
     },
   },
   {
     method: 'GET',
     path: '/contacts',
-    handler: getContactsHandler,
     options: {
-      tags: ['api', 'contacts'],
-      description: 'List all accepted contacts',
-      pre: [{ method: authMiddleware }],
+      tags: ['api', 'Contact'],
+      description: 'Get list of accepted contacts',
+      notes: 'Requires JWT authentication',
+      pre: [{ method: verifyToken }],
+      handler: ContactController.getContacts,
     },
   },
 ];
-
-module.exports = contactRoutes;

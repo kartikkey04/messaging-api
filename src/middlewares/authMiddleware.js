@@ -1,27 +1,21 @@
-const { verifyToken } = require('../utils/jwt');
-const User = require('../modules/auth/auth.model');
+const jwt = require('jsonwebtoken');
+const { logger } = require('../config/logger');
 
-const authMiddleware = async (request, h) => {
+const verifyToken = async (request, h) => {
+  const token = request.headers['authorization']?.split(' ')[1];
+
+  if (!token) {
+    return h.response({ message: 'Token is required' }).code(403);
+  }
+
   try {
-    const authHeader = request.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new Error('Missing or invalid token');
-    }
-
-    const token = authHeader.split(' ')[1];
-    const decoded = verifyToken(token);
-
-    const user = await User.findById(decoded.id).select('-password');
-    if (!user) throw new Error('User not found');
-
-    request.auth = { user };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    request.user = { userId: decoded.userId }; // Add user ID to the request object
     return h.continue;
   } catch (err) {
-    return h
-      .response({ message: 'Unauthorized', error: err.message })
-      .code(401)
-      .takeover();
+    logger.error('Error verifying token:', err);
+    return h.response({ message: 'Invalid or expired token' }).code(403);
   }
 };
 
-module.exports = authMiddleware;
+module.exports = { verifyToken };
